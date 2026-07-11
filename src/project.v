@@ -1,11 +1,14 @@
 /*
- * Copyright (c) 2024 Your Name
+ * Copyright (c) 2024 Jorropo
  * SPDX-License-Identifier: Apache-2.0
+ *
+ * Tiny Tapeout wrapper for the Turing Complete "Overture" architecture,
+ * exported from the sandbox schematic (src/sandbox.v).
  */
 
 `default_nettype none
 
-module tt_um_example (
+module tt_um_jorropo_overture (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
     input  wire [7:0] uio_in,   // IOs: Input path
@@ -16,12 +19,26 @@ module tt_um_example (
     input  wire       rst_n     // reset_n - low to reset
 );
 
-  // All output pins must be assigned. If not used, assign to 0.
-  assign uo_out  = ui_in + uio_in;  // Example: ou_out is the sum of ui_in and uio_in
-  assign uio_out = 0;
-  assign uio_oe  = 0;
+  // The Turing Complete design uses an active-high reset.
+  wire rst = ~rst_n;
+
+  wire       out_en;
+  wire       in_en;
+
+  sandbox overture (
+      .clk    (clk),
+      .rst    (rst),
+      .in     (ui_in),   // 8-bit input bus
+      .out    (uo_out),  // 8-bit output bus
+      .out_en (out_en),  // high when the design is driving `out`
+      .in_en  (in_en)    // high when the design is requesting input
+  );
+
+  // Expose the enable/handshake signals on the bidirectional pins as outputs.
+  assign uio_out = {6'b0, in_en, out_en};
+  assign uio_oe  = 8'b0000_0011;  // uio[0] and uio[1] are outputs
 
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena, clk, rst_n, 1'b0};
+  wire _unused = &{ena, uio_in, 1'b0};
 
 endmodule
