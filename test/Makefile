@@ -8,8 +8,8 @@ TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
 PROJECT_SOURCES = project.v sandbox.v \
 	TC_Add.v TC_And.v TC_Buffer.v TC_Constant.v TC_Counter.v \
-	TC_Decoder2.v TC_Decoder3.v TC_MakerBit.v TC_Mux.v TC_Nand.v \
-	TC_Nor.v TC_Not.v TC_Or.v TC_RAM_BE_NRST_L8.v TC_Register.v \
+	TC_Decoder2.v TC_Decoder3.v TC_DelayLine.v TC_MakerBit.v TC_Mux.v \
+	TC_Nand.v TC_Nor.v TC_Not.v TC_Or.v TC_RAM_BE_L8_S8.v TC_Register.v \
 	TC_SplitterBit.v TC_Switch.v TC_Xor.v
 
 ifneq ($(GATES),yes)

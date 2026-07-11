@@ -14,8 +14,12 @@ built as a schematic and exported to Verilog from the `sandbox` circuit.
 
 The design (`src/sandbox.v`) is composed of Turing Complete's built-in components
 (the `TC_*` modules under `src/`): registers, a counter used as a program counter,
-a RAM/ROM initialized from `src/1948035650992482295.hex`, decoders, an ALU
+a writable program/data RAM (`TC_RAM_BE_L8_S8`), decoders, an ALU
 (add / not / nand / and / or / xor), muxes, and bit splitters/makers.
+
+The program is not baked into a ROM. Instead, while `rst_n` is held low the CPU
+streams its program into RAM from the input port (`ui_in`); once reset is released
+it executes that program.
 
 `src/project.v` is a thin Tiny Tapeout wrapper (`tt_um_jorropo_overture`) that adapts
 the exported module to the TT pin interface:
@@ -33,11 +37,11 @@ bidirectional pins are unused.
 
 ## How to test
 
-Drive `ui_in` with the input byte and pulse `clk`. Watch `uo_out` for the output byte and
-`uio_out[0]` (`out_en`) to know when the output is valid; `uio_out[1]` (`in_en`) indicates the
-design is requesting the next input. Hold `rst_n` low for a few cycles first to reset the
-program counter and registers. The program executed comes from
-`src/1948035650992482295.hex`.
+Hold `rst_n` low and clock the program bytes in on `ui_in`, one byte per cycle, to load
+the RAM. Release `rst_n` to start execution. During the run, drive `ui_in` with the input
+byte and pulse `clk`; watch `uo_out` for the output byte and `uio_out[0]` (`out_en`) to know
+when the output is valid. `uio_out[1]` (`in_en`) indicates the design is requesting the next
+input.
 
 ## External hardware
 

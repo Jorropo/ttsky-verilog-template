@@ -7,14 +7,21 @@ from cocotb.triggers import ClockCycles
 
 
 @cocotb.test()
-async def test_project(dut):
+async def test_reset_and_run(dut):
+    """Smoke test for the Overture CPU.
+
+    The design loads its program into RAM from ui_in while reset is asserted,
+    then runs it. This test only checks that reset works and the design runs
+    without producing X on the outputs. Replace the program bytes and add
+    assertions once you have a concrete program to test.
+    """
     dut._log.info("Start")
 
     # Set the clock period to 10 us (100 KHz)
     clock = Clock(dut.clk, 10, unit="us")
     cocotb.start_soon(clock.start())
 
-    # Reset
+    # Reset. While rst_n is low, the program is streamed in on ui_in.
     dut._log.info("Reset")
     dut.ena.value = 1
     dut.ui_in.value = 0
@@ -23,18 +30,11 @@ async def test_project(dut):
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
 
-    dut._log.info("Test project behavior")
+    dut._log.info("Run")
+    # Let the CPU execute for a while.
+    await ClockCycles(dut.clk, 20)
 
-    # Set the input values you want to test
-    dut.ui_in.value = 20
-    dut.uio_in.value = 30
-
-    # Wait for one clock cycle to see the output values
-    await ClockCycles(dut.clk, 1)
-
-    # The following assersion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
-    assert dut.uo_out.value == 50
-
-    # Keep testing the module by changing the input values, waiting for
-    # one or more clock cycles, and asserting the expected output values.
+    # Outputs must be driven (no X/Z). uio[0]=out_en, uio[1]=in_en.
+    assert dut.uo_out.value.is_resolvable, "uo_out has undefined bits"
+    assert dut.uio_out.value.is_resolvable, "uio_out has undefined bits"
+    assert dut.uio_oe.value == 0b00000011, "uio_oe should mark uio[0]/uio[1] as outputs"
